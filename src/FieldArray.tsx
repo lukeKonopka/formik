@@ -59,7 +59,7 @@ export interface ArrayHelpers {
  * Some array helpers!
  */
 export const move = (array: any[], from: number, to: number) => {
-  const copy = [...(array || [])];
+  const copy = copyArrayLike(array);
   const value = copy[from];
   copy.splice(from, 1);
   copy.splice(to, 0, value);
@@ -67,7 +67,7 @@ export const move = (array: any[], from: number, to: number) => {
 };
 
 export const swap = (array: any[], indexA: number, indexB: number) => {
-  const copy = [...(array || [])];
+  const copy = copyArrayLike(array);
   const a = copy[indexA];
   copy[indexA] = copy[indexB];
   copy[indexB] = a;
@@ -75,16 +75,30 @@ export const swap = (array: any[], indexA: number, indexB: number) => {
 };
 
 export const insert = (array: any[], index: number, value: any) => {
-  const copy = [...(array || [])];
+  const copy = copyArrayLike(array);
   copy.splice(index, 0, value);
   return copy;
 };
 
 export const replace = (array: any[], index: number, value: any) => {
-  const copy = [...(array || [])];
+  const copy = copyArrayLike(array);
   copy[index] = value;
   return copy;
 };
+
+const copyArrayLike = (arrayLike: ArrayLike<any>) => {
+  if (!arrayLike) {
+    return [];
+  } else if (Array.isArray(arrayLike)) {
+    return [...arrayLike];
+  } else {
+    const maxIndex = Object.keys(arrayLike)
+      .map(key => parseInt(key))
+      .reduce((max, el) => (el > max ? el : max), 0);
+    return Array.from({ ...arrayLike, length: maxIndex + 1 });
+  }
+};
+
 class FieldArrayInner<Values = {}> extends React.Component<
   FieldArrayConfig & { formik: FormikContext<Values> },
   {}
@@ -222,7 +236,7 @@ class FieldArrayInner<Values = {}> extends React.Component<
     this.updateArrayField(
       // so this gets call 3 times
       (array?: any[]) => {
-        const copy = array ? [...array] : [];
+        const copy = array ? copyArrayLike(array) : [];
         if (!result) {
           result = copy[index];
         }
